@@ -15,7 +15,23 @@ def templates_iter(templ_dir):
 
 def match_filename(pattern, filepath):
     return re.search(pattern + '[^/]+$', filepath)
-    
+   
+# FIXME this code stinks
+def user_choice(matches):
+    for idx, mat in enumerate(matches):
+        print('[{}]:\t{}'.format(idx+1,mat))
+    nmbr = 0
+    while True:
+        c = input('Your choice: ')
+        try:
+            nmbr = int(c)
+        except:
+            print('"{}" could not be parsed to a number'.format(c))
+        else:
+            if not nmbr-1 in range(len(matches)):
+                print('{} is not one of the choices'.format(nmbr))
+            else:
+                return matches[nmbr-1]
 
 def main():
     options = _parse_args()
@@ -26,17 +42,20 @@ def main():
     for temp_file in templates_iter(options.templ_dir):
         if match_filename(filename, temp_file):
             matches.append(temp_file)
-        if len(matches) > 1:
-            print("Filename ambiguous: {}".format(matches))
-            sys.exit(-2)
+
+    choice = '' 
     if len(matches) == 0:
         print("No match found")
         sys.exit(-1)
+    elif len(matches) == 1:
+        choice = matches[0]
     else:
-        if options.destination[0] == '':
-            shutil.copy(matches[0], '.')
-        else:
-            shutil.copy(matches[0], './' + options.destination[0])
+        choice = user_choice(matches)
+
+    if not options.destination:
+        shutil.copy(choice, '.')
+    else:
+        shutil.copy(choice, './' + options.destination[0])
         
 def _parse_args():
     '''
